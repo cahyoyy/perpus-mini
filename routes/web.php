@@ -6,11 +6,7 @@ use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    if (auth()->check()) {
-        return redirect()->route('books.index');
-    }
-
-    return redirect()->route('login');
+    return view('welcome');
 });
 
 Route::middleware('guest')->group(function () {
