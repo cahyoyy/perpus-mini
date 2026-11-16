@@ -21,6 +21,7 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
+    Route::patch('/books/{book}/status', [BookController::class, 'toggleStatus'])->name('books.toggle-status');
     Route::resource('books', BookController::class);
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');

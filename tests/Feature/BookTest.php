@@ -354,6 +354,71 @@ class BookTest extends TestCase
     }
 
     /**
+     * Test toggling book availability status.
+     */
+    public function test_can_toggle_book_availability_status(): void
+    {
+        $user = User::factory()->create();
+        $book = Book::factory()->create([
+            'judul' => 'Laskar Pelangi',
+            'tersedia' => true,
+        ]);
+
+        // Toggle from true -> false
+        $response = $this->actingAs($user)->patch(route('books.toggle-status', $book));
+
+        $response->assertRedirect(route('books.index'));
+        $response->assertSessionHas('success', 'Status buku "Laskar Pelangi" berhasil diubah menjadi Dipinjam.');
+        $this->assertDatabaseHas('books', [
+            'id' => $book->id,
+            'tersedia' => false,
+        ]);
+
+        // Toggle from false -> true
+        $response = $this->actingAs($user)->patch(route('books.toggle-status', $book));
+
+        $response->assertRedirect(route('books.index'));
+        $response->assertSessionHas('success', 'Status buku "Laskar Pelangi" berhasil diubah menjadi Tersedia.');
+        $this->assertDatabaseHas('books', [
+            'id' => $book->id,
+            'tersedia' => true,
+        ]);
+    }
+
+    /**
+     * Test books index displays delete modal markup.
+     */
+    public function test_books_index_displays_delete_modal_markup(): void
+    {
+        $user = User::factory()->create();
+        Book::factory()->create(['judul' => 'Negeri 5 Menara']);
+
+        $response = $this->actingAs($user)->get(route('books.index'));
+
+        $response->assertOk();
+        $response->assertSee('Hapus buku ini?');
+        $response->assertSee('akan dihapus dari koleksi. Kamu tidak bisa membatalkan penghapusan ini.');
+        $response->assertSee('Ya, hapus');
+    }
+
+    /**
+     * Test deleting a book via form submission and redirect.
+     */
+    public function test_can_delete_a_book_via_form(): void
+    {
+        $user = User::factory()->create();
+        $book = Book::factory()->create(['judul' => 'Negeri 5 Menara']);
+
+        $response = $this->actingAs($user)->delete(route('books.destroy', $book));
+
+        $response->assertRedirect(route('books.index'));
+        $response->assertSessionHas('success', 'Buku "Negeri 5 Menara" berhasil dihapus dari koleksi.');
+        $this->assertDatabaseMissing('books', [
+            'id' => $book->id,
+        ]);
+    }
+
+    /**
      * Test deleting a book via controller destroy.
      */
     public function test_can_delete_a_book(): void

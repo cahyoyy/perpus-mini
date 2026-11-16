@@ -125,6 +125,7 @@ class BookController extends Controller
      */
     public function destroy(Request $request, Book $book): JsonResponse|RedirectResponse
     {
+        $title = $book->judul;
         $book->delete();
 
         if ($request->wantsJson()) {
@@ -133,6 +134,27 @@ class BookController extends Controller
             ]);
         }
 
-        return redirect()->route('books.index')->with('success', 'Buku berhasil dihapus.');
+        return redirect()->route('books.index')->with('success', "Buku \"{$title}\" berhasil dihapus dari koleksi.");
+    }
+
+    /**
+     * Toggle the availability status of the specified book.
+     */
+    public function toggleStatus(Request $request, Book $book): JsonResponse|RedirectResponse
+    {
+        $book->update([
+            'tersedia' => ! $book->tersedia,
+        ]);
+
+        if ($request->wantsJson()) {
+            return response()->json($book);
+        }
+
+        $status = $book->tersedia ? 'Tersedia' : 'Dipinjam';
+
+        return redirect()->route('books.index')->with(
+            'success',
+            "Status buku \"{$book->judul}\" berhasil diubah menjadi {$status}."
+        );
     }
 }
