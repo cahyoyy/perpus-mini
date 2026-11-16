@@ -15,8 +15,8 @@
         </div>
 
         <div>
-            <button
-                type="button"
+            <a
+                href="{{ route('books.create') }}"
                 class="inline-flex items-center gap-2 px-4 py-2.5 bg-[#b0922f] hover:bg-[#9f8226] active:bg-[#8f7420] text-[#26241f] font-semibold text-xs sm:text-sm rounded-xl transition shadow-xs cursor-pointer"
             >
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -24,9 +24,18 @@
                     <line x1="5" y1="12" x2="19" y2="12" />
                 </svg>
                 Tambah Buku
-            </button>
+            </a>
         </div>
     </div>
+
+    @if (session('success'))
+        <div class="mb-5 p-3.5 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-medium rounded-xl flex items-center gap-2">
+            <svg class="w-4 h-4 text-emerald-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+            </svg>
+            <span>{{ session('success') }}</span>
+        </div>
+    @endif
 
     <!-- Table Card -->
     <div class="bg-[#fffdf6] rounded-2xl sm:rounded-3xl border border-[#f0ebd9] overflow-hidden shadow-[0_2px_16px_rgba(40,30,10,0.03)]">
@@ -100,8 +109,8 @@
                                     </button>
 
                                     <!-- Tombol Ubah -->
-                                    <button
-                                        type="button"
+                                    <a
+                                        href="{{ route('books.edit', $book) }}"
                                         class="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-[#fffdf6] hover:bg-[#fbf8f0] border border-[#ded8cb] rounded-xl text-xs font-medium text-[#26241f] transition shadow-2xs cursor-pointer"
                                     >
                                         <svg class="w-3.5 h-3.5 text-[#57534e]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -109,7 +118,7 @@
                                             <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
                                         </svg>
                                         Ubah
-                                    </button>
+                                    </a>
 
                                     <!-- Tombol Hapus -->
                                     <button

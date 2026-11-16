@@ -17,7 +17,7 @@ class BookController extends Controller
     {
         $books = Book::all();
 
-        if ($request->wantsJson() || ! view()->exists('books.index')) {
+        if ($request->wantsJson()) {
             return response()->json($books);
         }
 
@@ -27,14 +27,8 @@ class BookController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create(): JsonResponse|View
+    public function create(): View
     {
-        if (! view()->exists('books.create')) {
-            return response()->json([
-                'message' => 'Form tambah buku belum tersedia.',
-            ]);
-        }
-
         return view('books.create');
     }
 
@@ -47,12 +41,23 @@ class BookController extends Controller
             'judul' => ['required', 'string', 'max:255'],
             'penulis' => ['required', 'string', 'max:255'],
             'tahun_terbit' => ['required', 'integer'],
-            'tersedia' => ['sometimes', 'boolean'],
+            'tersedia' => ['nullable'],
+        ], [
+            'judul.required' => 'Judul wajib diisi.',
+            'judul.string' => 'Judul harus berupa teks.',
+            'judul.max' => 'Judul maksimal 255 karakter.',
+            'penulis.required' => 'Penulis wajib diisi.',
+            'penulis.string' => 'Penulis harus berupa teks.',
+            'penulis.max' => 'Penulis maksimal 255 karakter.',
+            'tahun_terbit.required' => 'Tahun terbit wajib diisi.',
+            'tahun_terbit.integer' => 'Tahun terbit harus berupa angka.',
         ]);
+
+        $validated['tersedia'] = $request->boolean('tersedia');
 
         $book = Book::create($validated);
 
-        if ($request->wantsJson() || ! view()->exists('books.index')) {
+        if ($request->wantsJson()) {
             return response()->json($book, 201);
         }
 
@@ -74,15 +79,8 @@ class BookController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Book $book): JsonResponse|View
+    public function edit(Book $book): View
     {
-        if (! view()->exists('books.edit')) {
-            return response()->json([
-                'message' => 'Form edit buku belum tersedia.',
-                'book' => $book,
-            ]);
-        }
-
         return view('books.edit', compact('book'));
     }
 
@@ -91,16 +89,31 @@ class BookController extends Controller
      */
     public function update(Request $request, Book $book): JsonResponse|RedirectResponse
     {
+        $isJson = $request->wantsJson();
+
         $validated = $request->validate([
-            'judul' => ['sometimes', 'required', 'string', 'max:255'],
-            'penulis' => ['sometimes', 'required', 'string', 'max:255'],
-            'tahun_terbit' => ['sometimes', 'required', 'integer'],
-            'tersedia' => ['sometimes', 'boolean'],
+            'judul' => [$isJson ? 'sometimes' : 'required', 'string', 'max:255'],
+            'penulis' => [$isJson ? 'sometimes' : 'required', 'string', 'max:255'],
+            'tahun_terbit' => [$isJson ? 'sometimes' : 'required', 'integer'],
+            'tersedia' => ['nullable'],
+        ], [
+            'judul.required' => 'Judul wajib diisi.',
+            'judul.string' => 'Judul harus berupa teks.',
+            'judul.max' => 'Judul maksimal 255 karakter.',
+            'penulis.required' => 'Penulis wajib diisi.',
+            'penulis.string' => 'Penulis harus berupa teks.',
+            'penulis.max' => 'Penulis maksimal 255 karakter.',
+            'tahun_terbit.required' => 'Tahun terbit wajib diisi.',
+            'tahun_terbit.integer' => 'Tahun terbit harus berupa angka.',
         ]);
+
+        if ($request->has('tersedia') || ! $isJson) {
+            $validated['tersedia'] = $request->boolean('tersedia');
+        }
 
         $book->update($validated);
 
-        if ($request->wantsJson() || ! view()->exists('books.index')) {
+        if ($isJson) {
             return response()->json($book);
         }
 
@@ -114,7 +127,7 @@ class BookController extends Controller
     {
         $book->delete();
 
-        if ($request->wantsJson() || ! view()->exists('books.index')) {
+        if ($request->wantsJson()) {
             return response()->json([
                 'message' => 'Buku berhasil dihapus.',
             ]);

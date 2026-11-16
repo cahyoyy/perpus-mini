@@ -114,27 +114,108 @@ class BookTest extends TestCase
     }
 
     /**
-     * Test create endpoint returns response.
+     * Test create page can be rendered by authenticated user.
      */
-    public function test_can_access_create(): void
+    public function test_can_render_create_book_page(): void
     {
         $user = User::factory()->create();
 
         $response = $this->actingAs($user)->get(route('books.create'));
 
         $response->assertOk();
+        $response->assertViewIs('books.create');
+        $response->assertSee('Tambah Buku');
+        $response->assertSee('Isi data buku baru, lalu simpan.');
+        $response->assertSee('Judul');
+        $response->assertSee('Penulis');
+        $response->assertSee('Tahun terbit');
+        $response->assertSee('Tersedia untuk dipinjam');
+        $response->assertSee('Buku baru otomatis berstatus Tersedia.');
+        $response->assertSee('Simpan');
+        $response->assertSee('Batal');
     }
 
     /**
-     * Test creating a new book via controller store.
+     * Test creating a new book via form submission and redirect.
      */
-    public function test_can_create_a_book(): void
+    public function test_can_create_a_book_via_form(): void
     {
         $user = User::factory()->create();
         $payload = [
             'judul' => 'Tenggelamnya Kapal Van der Wijck',
             'penulis' => 'Hamka',
+            'tahun_terbit' => '1938',
+            'tersedia' => '1',
+        ];
+
+        $response = $this->actingAs($user)->post(route('books.store'), $payload);
+
+        $response->assertRedirect(route('books.index'));
+        $response->assertSessionHas('success', 'Buku berhasil ditambahkan.');
+        $this->assertDatabaseHas('books', [
+            'judul' => 'Tenggelamnya Kapal Van der Wijck',
+            'penulis' => 'Hamka',
             'tahun_terbit' => 1938,
+            'tersedia' => true,
+        ]);
+    }
+
+    /**
+     * Test creating a new book with tersedia unchecked (false).
+     */
+    public function test_can_create_a_book_with_tersedia_false(): void
+    {
+        $user = User::factory()->create();
+        $payload = [
+            'judul' => 'Catatan Seorang Demonstran',
+            'penulis' => 'Soe Hok Gie',
+            'tahun_terbit' => '1983',
+        ];
+
+        $response = $this->actingAs($user)->post(route('books.store'), $payload);
+
+        $response->assertRedirect(route('books.index'));
+        $this->assertDatabaseHas('books', [
+            'judul' => 'Catatan Seorang Demonstran',
+            'penulis' => 'Soe Hok Gie',
+            'tahun_terbit' => 1983,
+            'tersedia' => false,
+        ]);
+    }
+
+    /**
+     * Test validation failure on create with Indonesian messages.
+     */
+    public function test_store_validation_errors(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)
+            ->from(route('books.create'))
+            ->post(route('books.store'), [
+                'judul' => '',
+                'penulis' => '',
+                'tahun_terbit' => 'dua ribu lima',
+            ]);
+
+        $response->assertRedirect(route('books.create'));
+        $response->assertSessionHasErrors([
+            'judul' => 'Judul wajib diisi.',
+            'penulis' => 'Penulis wajib diisi.',
+            'tahun_terbit' => 'Tahun terbit harus berupa angka.',
+        ]);
+    }
+
+    /**
+     * Test creating a new book via JSON API.
+     */
+    public function test_can_create_a_book_json(): void
+    {
+        $user = User::factory()->create();
+        $payload = [
+            'judul' => 'Gadis Pantai',
+            'penulis' => 'Pramoedya Ananta Toer',
+            'tahun_terbit' => 1982,
             'tersedia' => true,
         ];
 
@@ -142,9 +223,9 @@ class BookTest extends TestCase
 
         $response->assertStatus(201);
         $this->assertDatabaseHas('books', [
-            'judul' => 'Tenggelamnya Kapal Van der Wijck',
-            'penulis' => 'Hamka',
-            'tahun_terbit' => 1938,
+            'judul' => 'Gadis Pantai',
+            'penulis' => 'Pramoedya Ananta Toer',
+            'tahun_terbit' => 1982,
             'tersedia' => true,
         ]);
     }
@@ -170,22 +251,91 @@ class BookTest extends TestCase
     }
 
     /**
-     * Test edit endpoint returns response.
+     * Test edit page can be rendered by authenticated user.
      */
-    public function test_can_access_edit(): void
+    public function test_can_render_edit_book_page(): void
     {
         $user = User::factory()->create();
-        $book = Book::factory()->create();
+        $book = Book::factory()->create([
+            'judul' => 'Negeri 5 Menara',
+            'penulis' => 'Ahmad Fuadi',
+            'tahun_terbit' => 2009,
+            'tersedia' => false,
+        ]);
 
         $response = $this->actingAs($user)->get(route('books.edit', $book));
 
         $response->assertOk();
+        $response->assertViewIs('books.edit');
+        $response->assertSee('Ubah Buku');
+        $response->assertSee('Perbarui data buku, lalu simpan perubahannya.');
+        $response->assertSee('Negeri 5 Menara');
+        $response->assertSee('Ahmad Fuadi');
+        $response->assertSee('2009');
+        $response->assertSee('Hapus centang jika buku sedang dipinjam.');
+        $response->assertSee('Simpan Perubahan');
+        $response->assertSee('Batal');
     }
 
     /**
-     * Test updating a book via controller update.
+     * Test updating a book via form submission and redirect.
      */
-    public function test_can_update_a_book(): void
+    public function test_can_update_a_book_via_form(): void
+    {
+        $user = User::factory()->create();
+        $book = Book::factory()->create([
+            'judul' => 'Buku Lama',
+            'penulis' => 'Penulis Lama',
+            'tahun_terbit' => 2000,
+            'tersedia' => false,
+        ]);
+
+        $response = $this->actingAs($user)->put(route('books.update', $book), [
+            'judul' => 'Buku Baru',
+            'penulis' => 'Penulis Baru',
+            'tahun_terbit' => '2024',
+            'tersedia' => '1',
+        ]);
+
+        $response->assertRedirect(route('books.index'));
+        $response->assertSessionHas('success', 'Buku berhasil diperbarui.');
+        $this->assertDatabaseHas('books', [
+            'id' => $book->id,
+            'judul' => 'Buku Baru',
+            'penulis' => 'Penulis Baru',
+            'tahun_terbit' => 2024,
+            'tersedia' => true,
+        ]);
+    }
+
+    /**
+     * Test validation failure on update with Indonesian messages.
+     */
+    public function test_update_validation_errors(): void
+    {
+        $user = User::factory()->create();
+        $book = Book::factory()->create();
+
+        $response = $this->actingAs($user)
+            ->from(route('books.edit', $book))
+            ->put(route('books.update', $book), [
+                'judul' => '',
+                'penulis' => '',
+                'tahun_terbit' => '',
+            ]);
+
+        $response->assertRedirect(route('books.edit', $book));
+        $response->assertSessionHasErrors([
+            'judul' => 'Judul wajib diisi.',
+            'penulis' => 'Penulis wajib diisi.',
+            'tahun_terbit' => 'Tahun terbit wajib diisi.',
+        ]);
+    }
+
+    /**
+     * Test updating a book via JSON API.
+     */
+    public function test_can_update_a_book_json(): void
     {
         $user = User::factory()->create();
         $book = Book::factory()->create([
