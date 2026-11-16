@@ -35,7 +35,7 @@ class AuthTest extends TestCase
         $response->assertSee('Perpus Mini');
     }
 
-    public function test_new_users_can_register(): void
+    public function test_new_users_can_register_and_are_redirected_to_books(): void
     {
         $response = $this->post('/register', [
             'name' => 'Budi Santoso',
@@ -54,7 +54,7 @@ class AuthTest extends TestCase
         $this->assertNotNull($user);
         $this->assertTrue(Hash::check('password123', $user->password));
 
-        $response->assertRedirect(route('dashboard'));
+        $response->assertRedirect(route('books.index'));
     }
 
     public function test_registration_fails_when_password_less_than_8_characters(): void
@@ -102,7 +102,7 @@ class AuthTest extends TestCase
         $response->assertSessionHasErrors(['email']);
     }
 
-    public function test_users_can_authenticate_using_the_login_screen(): void
+    public function test_users_can_authenticate_using_the_login_screen_and_redirect_to_books(): void
     {
         $user = User::factory()->create([
             'email' => 'siti@example.com',
@@ -115,7 +115,7 @@ class AuthTest extends TestCase
         ]);
 
         $this->assertAuthenticated();
-        $response->assertRedirect(route('dashboard'));
+        $response->assertRedirect(route('books.index'));
     }
 
     public function test_users_cannot_authenticate_with_invalid_password(): void
@@ -172,9 +172,9 @@ class AuthTest extends TestCase
         $user = User::factory()->create();
 
         $response = $this->actingAs($user)->get('/login');
-        $response->assertRedirect(route('dashboard'));
+        $response->assertRedirect(route('books.index'));
 
         $response = $this->actingAs($user)->get('/register');
-        $response->assertRedirect(route('dashboard'));
+        $response->assertRedirect(route('books.index'));
     }
 }

@@ -21,7 +21,7 @@ class BookSeeder extends Seeder
             ],
             [
                 'judul' => 'Bumi Manusia',
-                'penulis' => 'Pramoedya Ananta Toer',
+                'penulis' => 'Pramoedya A. Toer',
                 'tahun_terbit' => 1980,
                 'tersedia' => true,
             ],
@@ -32,30 +32,29 @@ class BookSeeder extends Seeder
                 'tersedia' => false,
             ],
             [
-                'judul' => 'Filosofi Kopi',
-                'penulis' => 'Dee Lestari',
+                'judul' => 'Sang Pemimpi',
+                'penulis' => 'Andrea Hirata',
                 'tahun_terbit' => 2006,
                 'tersedia' => true,
             ],
             [
-                'judul' => 'Cantik Itu Luka',
-                'penulis' => 'Eka Kurniawan',
-                'tahun_terbit' => 2002,
-                'tersedia' => true,
+                'judul' => 'Perahu Kertas',
+                'penulis' => 'Dee Lestari',
+                'tahun_terbit' => 2009,
+                'tersedia' => false,
             ],
             [
-                'judul' => 'Ronggeng Dukuh Paruk',
-                'penulis' => 'Ahmad Tohari',
-                'tahun_terbit' => 1982,
-                'tersedia' => false,
+                'judul' => 'Ayat-Ayat Cinta',
+                'penulis' => 'Habiburrahman El Shirazy',
+                'tahun_terbit' => 2004,
+                'tersedia' => true,
             ],
         ];
 
         foreach ($books as $book) {
-            Book::firstOrCreate(
+            Book::updateOrCreate(
                 [
                     'judul' => $book['judul'],
-                    'penulis' => $book['penulis'],
                 ],
                 $book
             );

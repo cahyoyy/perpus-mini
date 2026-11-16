@@ -6,7 +6,11 @@ use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('welcome');
+    if (auth()->check()) {
+        return redirect()->route('books.index');
+    }
+
+    return redirect()->route('login');
 });
 
 Route::middleware('guest')->group(function () {
@@ -17,8 +21,7 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
+    Route::resource('books', BookController::class);
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });
-
-Route::resource('books', BookController::class);
